@@ -6,6 +6,7 @@ import Signup from './components/Signup'
 import OrderCompletionPage from './components/OrderCompletionPage'
 import Product from './components/Product'
 import Body from './components/Body'
+import Invoice from './components/Invoice'
 
 function App() {
 
@@ -21,6 +22,10 @@ function App() {
         {
           path: "/orderComplete",
           element: <OrderCompletionPage />
+        },
+        {
+          path: "/invoice/:invoiceId",
+          element: <Invoice />
         }
       ]
     },

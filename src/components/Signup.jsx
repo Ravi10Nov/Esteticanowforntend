@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ClipLoader from "react-spinners/ClipLoader";
 import { addUser } from "../store/userSlice";
 import { useDispatch } from "react-redux";
+import { API_URL } from "../../src/config";
 
 const Signup = () => {
 
@@ -41,7 +42,7 @@ const Signup = () => {
         }
         try {
             setLoader(true)
-            const res = await axios.post("http://localhost:7777/user/signup", postData, { withCredentials: true });
+            const res = await axios.post(`${API_URL}/user/signup`, postData, { withCredentials: true });
             if (res?.data?.success) {
                 setLoader(false)
                 nevigate("/");

@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { addUser } from "../store/userSlice";
+import { API_URL } from "../../src/config";
 
 const Body = () => {
 
@@ -14,7 +15,7 @@ const Body = () => {
     const fetchUser = async () => {
 
         try {
-            const res = await axios.get("http://localhost:7777/user/getProfile", { withCredentials: true });
+            const res = await axios.get(`${API_URL}/user/getProfile`, { withCredentials: true });
             if (res?.data?.success) {
                 dispatch(addUser(res?.data?.user));
             } else {
@@ -24,10 +25,6 @@ const Body = () => {
             console.log(err)
         }
     };
-
-    // useEffect(() => {
-    //     fetchUser()
-    // }, [])
 
     useEffect(() => {
         const hasToken = document.cookie
@@ -40,8 +37,6 @@ const Body = () => {
         }
         fetchUser();
     }, [nevigate]);
-
-    console.log("user: ", user)
 
 
     return (

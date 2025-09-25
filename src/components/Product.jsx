@@ -3,9 +3,8 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import {  addItemServer, selectCartItems, fetchCart,  decreaseItemServer, removeItemServer } from "../store/cartSlice";
 import ClipLoader from "react-spinners/ClipLoader";
-import { Link, useNavigate } from "react-router-dom";
-
-
+import { Link } from "react-router-dom";
+import { API_URL } from "../../src/config";
 
 const Product = () => {
 
@@ -19,11 +18,7 @@ const Product = () => {
     const dispatch = useDispatch();
     const cartItems = useSelector(selectCartItems);
     const isAuth = useSelector((store) => !!store.user?.user);
-    const nevigate = useNavigate();
 
-    // useEffect(() => {
-    //     setCart(cartItems);
-    // }, [cartItems]);
 
     useEffect(() => {
         const formatted = cartItems.map((item) => ({
@@ -33,52 +28,50 @@ const Product = () => {
         setCart(formatted);
     }, [cartItems]);
 
-
-
     const addToCart = (p) => {
         dispatch(addItemServer({ productId: p._id, quantity: 1, setLoader }))
     };
 
-    const updateQty = (_id, delta) => {
-        setCart((prev) =>
-            prev
-                .map((c) =>
-                    c._id === _id ? { ...c, qty: c.qty + delta } : c
-                )
-                .filter((c) => c.qty > 0)
-        );
-    };
-
-    const fetchData = async () => {
+    const fetchCategories = async () => {
         try {
             setLoader(true);
-            const [categoryRes, productRes] = await Promise.all([
-                axios.get("http://localhost:7777/category/getCategory"),
-                axios.get("http://localhost:7777/product/getProducts")
-            ]);
-
-            if (categoryRes.data.success) {
-                setCategorie(categoryRes.data.categories);
-                if (categoryRes.data.categories.length > 0) {
-                    setSelectedCategory(categoryRes.data.categories[0]);
+            const res = await axios.get(`${API_URL}/category/getCategory`);
+            if (res.data.success) {
+                setCategorie(res.data.categories);
+                if (res.data.categories.length > 0) {
+                    setSelectedCategory(res.data.categories[0]);
                 }
             }
+            setLoader(false);
+        } catch (err) {
+            console.error(err);
+            setLoader(false);
+        }
+    };
 
-
-            if (productRes.data.success) {
-                setProducts(productRes.data.products);
+    const fetchProductsByCategory = async (categoryId) => {
+        try {
+            setLoader(true);
+            const res = await axios.get(`${API_URL}/product/getProductsByCategory/${categoryId}`);
+            if (res.data.success) {
+                setProducts(res.data.products);
             }
             setLoader(false);
-
         } catch (err) {
-            console.error("Failed to fetch categories or products:", err);
+            console.error(err);
             setLoader(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
-    }, [])
+        fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        if (selectedCategory) {
+            fetchProductsByCategory(selectedCategory._id);
+        }
+    }, [selectedCategory]);
 
     useEffect(() => {
         if (isAuth) {
@@ -86,9 +79,6 @@ const Product = () => {
         }
     }, [isAuth, dispatch]);
 
-
-    console.log("cartItems: ", cartItems);
-    console.log("cart: ", cart);
 
     if (loader) return <div className="flex items-center justify-center h-screen">
         <ClipLoader color="#10b981" size={80} />
@@ -110,7 +100,6 @@ const Product = () => {
                     className="w-64 mb-6 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
 
-                {/* Categories */}
                 <div className="flex flex-wrap gap-3 mb-6">
                     {categorie?.map((c) => (
                         <button
@@ -129,32 +118,30 @@ const Product = () => {
 
                 <div className="grid gap-4 grid-cols-2 sm:grid-cols-6 lg:grid-cols-6">
 
-                    {products
-                        .filter(p => selectedCategory ? p.category._id === selectedCategory._id : true)
-                        .map((p) => (
-                            <div
-                                key={p._id}
-                                className="bg-white p-2 rounded-xl shadow hover:shadow-md transition text-center cursor-pointer"
-                            >
-                                <div className="w-full h-24 flex items-center justify-center mb-3">
-                                    <img
-                                        src={p.image}
-                                        alt={p.name}
-                                        className="h-full object-contain rounded-lg"
-                                    />
-                                </div>
-
-                                <p className="font-medium text-gray-800 text-sm truncate">{p.name}</p>
-                                <p className="text-gray-500 text-sm mt-1">₹{p.price}</p>
-
-                                <button
-                                    onClick={() => addToCart(p)}
-                                    className="mt-3 bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-600"
-                                >
-                                    Add
-                                </button>
+                    {products.map((p) => (
+                        <div
+                            key={p._id}
+                            className="bg-white p-2 rounded-xl shadow hover:shadow-md transition text-center cursor-pointer"
+                        >
+                            <div className="w-full h-24 flex items-center justify-center mb-3">
+                                <img
+                                    src={p.image}
+                                    alt={p.name}
+                                    className="h-full object-contain rounded-lg"
+                                />
                             </div>
-                        ))}
+
+                            <p className="font-medium text-gray-800 text-sm truncate">{p.name}</p>
+                            <p className="text-gray-500 text-sm mt-1">₹{p.price}</p>
+
+                            <button
+                                onClick={() => addToCart(p)}
+                                className="mt-3 bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-600"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
             </div>
@@ -191,7 +178,6 @@ const Product = () => {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => {
-                                        // updateQty(item._id, -1)
                                         dispatch(decreaseItemServer({ productId: item._id, setLoader }))
                                     }}
                                     className="px-2 py-1 border rounded"
@@ -201,7 +187,6 @@ const Product = () => {
                                 <span>{item.qty}</span>
                                 <button
                                     onClick={() => {
-                                        // updateQty(item._id, 1)
                                         dispatch(addItemServer({ productId: item._id, quantity: 1, setLoader }))
                                     }}
                                     className="px-2 py-1 border rounded"

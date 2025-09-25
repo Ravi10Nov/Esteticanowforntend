@@ -3,6 +3,7 @@ import { useState } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
 import axios from "axios";
 import { useDispatch } from "react-redux";
+import { API_URL } from "../../src/config";
 
 
 const Login = () => {
@@ -39,7 +40,7 @@ const Login = () => {
         }
         try {
             setLoader(true)
-            const res = await axios.post("http://localhost:7777/user/login", postData, { withCredentials: true });
+            const res = await axios.post(`${API_URL}/user/login`, postData, { withCredentials: true });
             console.log(res.data);
             if (res?.data?.success) {
                 setLoader(false);

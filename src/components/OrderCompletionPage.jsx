@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../../src/config";
 
 const OrderCompletionPage = () => {
   const [loader, setLoader] = useState(false);
   const [appointment, setAppointment] = useState(null);
+  const navigate = useNavigate();
 
   const user = useSelector((store) => store.user?.user);
 
@@ -17,16 +20,15 @@ const OrderCompletionPage = () => {
 
       try {
         const createRes = await axios.post(
-          "http://localhost:7777/appointment/createAppointment",
+          `${API_URL}/appointment/createAppointment`,
           {},
           { withCredentials: true }
         );
 
         const appointmentId = createRes.data.appointment._id;
 
-        // Then fetch appointment details
         const res = await axios.get(
-          `http://localhost:7777/appointment/getAppointment/${appointmentId}`,
+          `${API_URL}/appointment/getAppointment/${appointmentId}`,
           { withCredentials: true }
         );
 
@@ -41,6 +43,27 @@ const OrderCompletionPage = () => {
     fetchAppointment();
   }, [user]);
 
+  const handlePayment = async () => {
+    console.log("hello");
+    const apptId = appointment?.appointment?._id; 
+    if (!apptId) return;
+
+    try {
+      setLoader(true);
+      const res = await axios.post(
+        `${API_URL}/invoice/createInvoice`,
+        { appointmentId: apptId },
+        { withCredentials: true }
+      );
+      const invoiceId = res.data.invoice._id;
+      navigate(`/invoice/${invoiceId}`); 
+    } catch (err) {
+      console.error("Invoice create error:", err);
+    } finally {
+      setLoader(false);
+    }
+  };
+
   if (loader || !appointment)
     return (
       <div className="flex items-center justify-center h-screen">
@@ -50,6 +73,8 @@ const OrderCompletionPage = () => {
 
   const items = appointment.appointment.cart.items;
   const totals = appointment.totals;
+
+  console.log("appointment: ", appointment);
 
   return (
     <>
@@ -115,7 +140,7 @@ const OrderCompletionPage = () => {
             <span>Final Total</span>
             <span>₹{totals.finalTotal}</span>
           </div>
-          <button className="mt-6 w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600">
+          <button className="mt-6 w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600" onClick={handlePayment}>
             Complete Payment
           </button>
         </div>

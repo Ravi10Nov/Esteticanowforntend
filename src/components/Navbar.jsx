@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { removeUser } from "../store/userSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_URL } from "../../src/config";
+import { setLocalCart } from "../store/cartSlice";
 
 
 const Navbar = () => {
@@ -16,9 +18,10 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            const res = await axios.post("http://localhost:7777/user/logout", {}, { withCredentials: true });
+            const res = await axios.post(`${API_URL}/user/logout`, {}, { withCredentials: true });
             if (res?.data?.success) {
                 dispatch(removeUser());
+                dispatch(setLocalCart([]));
                 nevigate("/login")
             }
         } catch (err) {
@@ -41,10 +44,10 @@ const Navbar = () => {
         <nav className="flex items-center justify-between px-6 py-3 bg-gray-50 border-b border-gray-200">
             {/* Left side */}
             <div className="flex items-center gap-5">
-                <span className="text-xl font-bold text-indigo-600">Estetica</span>
+                <Link to="/"><span className="text-xl font-bold text-indigo-600">Estetica</span></Link>
                 <span className="text-gray-600 text-sm">
                     Welcome Back, {user?.name}
-                </span>
+                </span> 
             </div>
 
             <div className="flex items-center gap-4 relative" ref={dropdownRef}>
